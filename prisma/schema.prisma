@@ -1,0 +1,33 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  phone     String   @unique
+  role      Role
+  objects   Object[] // aloqasi: bitta user → ko‘p obyekt
+  createdAt DateTime @default(now())
+}
+
+model Object {
+  id        String   @id @default(uuid())
+  title     String
+  address   String
+  price     Int
+  photos    String[] // massiv sifatida saqlash
+  owner     User     @relation(fields: [ownerId], references: [id])
+  ownerId   String
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  OWNER
+  TENANT
+}
