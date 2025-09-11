@@ -15,8 +15,11 @@ async function bootstrap() {
   });
   app.useGlobalPipes(new ValidationPipe({
     transform: true,
+    whitelist: true,
+    transformOptions: {
+      enableImplicitConversion: true,
+    },
   }));
-
   const config = new DocumentBuilder()
     .setTitle('Web bot API')
     .setDescription('Web bot CRUD endpoints')

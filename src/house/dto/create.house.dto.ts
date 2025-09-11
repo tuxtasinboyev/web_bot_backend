@@ -1,43 +1,45 @@
-import { IsString, IsOptional, IsNumber, IsArray, ArrayNotEmpty, IsInt, IsDecimal } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsInt } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Decimal } from '@prisma/client/runtime/library';
 
 export class CreateHouseDto {
-    @ApiProperty({ description: 'Uyning sarlavhasi' })
-    @IsString()
-    title: string;
+  @ApiProperty({ description: 'Uyning sarlavhasi' })
+  @IsString()
+  title: string;
 
-    @ApiPropertyOptional({ description: 'Uyning tavsifi' })
-    @IsString()
-    @IsOptional()
-    description?: string;
+  @ApiPropertyOptional({ description: 'Uyning tavsifi' })
+  @IsString()
+  @IsOptional()
+  description?: string;
 
-    @ApiProperty({ description: 'Uyning manzili' })
-    @IsString()
-    address: string;
+  @ApiProperty({ description: 'Uyning manzili' })
+  @IsString()
+  address: string;
+  
+  @ApiPropertyOptional({ description: 'Uyning Kvadrati' })
+  @IsNumber()
+  @IsOptional()
+  area?: number;
 
-    @ApiPropertyOptional({ description: 'Uyning Kvadrati ' })
-    @IsString()
-    area: string;
+  @ApiPropertyOptional({ description: 'Uyning qavati' })
+  @IsInt()
+  @IsOptional()
+  floor?: number;
 
-    @ApiPropertyOptional({ description: 'Uyning  qavati ' })
-    @IsString()
-    floor: string;
+  @ApiPropertyOptional({ description: 'Uyning hamma qavati' })
+  @IsInt()
+  @IsOptional()
+  allFloor?: number;
 
-    @ApiPropertyOptional({ description: 'Uyning hamma qavati  qavati ' })
-    @IsString()
-    allFloor: string;
+  @ApiProperty({ description: 'Uyning narxi' })
+  @IsNumber()
+  price: number;
 
-    @ApiProperty({ description: 'Uyning narxi' })
-    price: string;
+  @ApiProperty({ description: 'Xonalar soni' })
+  @IsInt()
+  rooms: number;
 
-    @ApiProperty({ description: 'Xonalar soni' })
-    @IsString()
-    rooms: string;
-
-
-    @ApiPropertyOptional({ description: 'Kategoriya ID si' })
-    @IsInt()
-    @IsOptional()
-    categoryId?: number;
+  @ApiPropertyOptional({ description: 'Kategoriya ID si' })
+  @IsInt()
+  @IsOptional()
+  categoryId?: number;
 }

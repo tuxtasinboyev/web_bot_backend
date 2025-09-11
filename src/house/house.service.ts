@@ -30,7 +30,7 @@ export class HouseService {
                 allFloor: payload.allFloor,
                 rooms: payload.rooms,
                 area: payload.area,
-                categoryId: payload.categoryId ? Number(payload.categoryId) : undefined,
+                categoryId: payload.categoryId,
                 images: uploadedImages,
                 ownerId: user.id,
             },
@@ -129,50 +129,59 @@ export class HouseService {
     }
 
 
-    async updateHouse(id: number, userId: number, payload: Partial<CreateHouseDto>, image?: string[]) {
-
+    async updateHouse(
+        id: number,
+        userId: number,
+        payload: Partial<CreateHouseDto>,
+        image?: string[]
+    ) {
         const house = await this.prisma.house.findUnique({ where: { id } });
         if (!house) throw new NotFoundException('House not found');
 
-        if (house.ownerId !== userId) throw new UnauthorizedException('Siz bu uyni yangilay olmaysiz');
+        if (house.ownerId !== userId) {
+            throw new UnauthorizedException('Siz bu uyni yangilay olmaysiz');
+        }
 
+        // eski rasmlarni o‘chirish
         if (house.images && image) {
-            house.images.map((img) => {
-                const fileNameToDelete = img.split('/').at(-1) || "";
-
+            house.images.forEach((img) => {
+                const fileNameToDelete = img.split('/').at(-1) || '';
                 if (house.images.includes(img)) {
                     unlinkFile(fileNameToDelete);
                 }
-            })
+            });
         }
-        const images = image?.map((img) => urlGenerator(this.config, img))
 
+        const images = image?.map((img) => urlGenerator(this.config, img));
         const dataToUpdate: any = {};
 
         if (payload.title) dataToUpdate.title = payload.title;
-        if (payload.price !== undefined) dataToUpdate.price = Number(payload.price);
-        if (payload.rooms !== undefined) dataToUpdate.rooms = payload.rooms;
-        if (payload.area !== undefined) dataToUpdate.area = payload.area;
-        if (payload.floor !== undefined) dataToUpdate.floor = payload.floor;
-        if (payload.allFloor !== undefined) dataToUpdate.allFloor = payload.allFloor;
+        if (payload.price !== undefined)
+            dataToUpdate.price = Number(payload.price);           // 🔧
+        if (payload.rooms !== undefined)
+            dataToUpdate.rooms = Number(payload.rooms);           // 🔧
+        if (payload.area !== undefined)
+            dataToUpdate.area = Number(payload.area);             // 🔧
+        if (payload.floor !== undefined)
+            dataToUpdate.floor = Number(payload.floor);           // 🔧
+        if (payload.allFloor !== undefined)
+            dataToUpdate.allFloor = Number(payload.allFloor);     // 🔧
         if (payload.address) dataToUpdate.address = payload.address;
         if (payload.description) dataToUpdate.description = payload.description;
-        if (payload.categoryId !== undefined) dataToUpdate.categoryId = payload.categoryId;
+        if (payload.categoryId !== undefined)
+            dataToUpdate.categoryId = Number(payload.categoryId); // 🔧
         if (images) dataToUpdate.images = images;
 
         dataToUpdate.ownerId = userId;
 
-        const updatedHouse = await this.prisma.house.update({
+        return this.prisma.house.update({
             where: { id },
             data: dataToUpdate,
             include: {
                 owner: { select: { id: true, name: true, phone: true, role: true } },
-                Category: { select: { id: true, name: true } }
-            }
+                Category: { select: { id: true, name: true } },
+            },
         });
-
-
-        return updatedHouse;
     }
 
     async deleteHouse(id: number, userId: number) {

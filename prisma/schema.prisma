@@ -38,10 +38,10 @@ model House {
   description String?
   address     String
   price       Int
-  rooms       String
-  floor       String
-  area        String
-  allFloor    String
+  rooms       Int
+  floor       Int? // optional qavat
+  area        Int? // optional kvadrat
+  allFloor    Int? // optional jami qavat
   images      String[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
