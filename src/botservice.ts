@@ -17,7 +17,7 @@ export class BotService implements OnModuleInit {
         Markup.inlineKeyboard([
           Markup.button.webApp(
             "📋 Ro‘yxatdan o‘tish",
-            "https://web-bot-9xne.vercel.app/"
+            "https://salomnn.netlify.app/login"
           ),
         ])
       )

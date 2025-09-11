@@ -1,3 +1,5 @@
+// schema.prisma
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -8,26 +10,50 @@ generator client {
 }
 
 model User {
-  id        String   @id @default(uuid())
+  id        Int      @id @default(autoincrement())
   name      String
   phone     String   @unique
+  password  String
   role      Role
-  objects   Object[] // aloqasi: bitta user → ko‘p obyekt
+  imgUrl    String?
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  houses House[]
 }
 
-model Object {
-  id        String   @id @default(uuid())
-  title     String
-  address   String
-  price     Int
-  photos    String[] // massiv sifatida saqlash
-  owner     User     @relation(fields: [ownerId], references: [id])
-  ownerId   String
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  imgUrl    String
+
+  houses House[]
+}
+
+model House {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  address     String
+  price       Int
+  rooms       String
+  floor       String
+  area        String
+  allFloor    String
+  images      String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  ownerId    Int
+  owner      User      @relation(fields: [ownerId], references: [id])
+  Category   Category? @relation(fields: [categoryId], references: [id])
+  categoryId Int?
 }
 
 enum Role {
+  ADMIN
   OWNER
   TENANT
 }

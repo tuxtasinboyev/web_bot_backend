@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
-import { UsersController } from './bot.controller';
-// import { BotService } from './bot.service';
+import { UserController } from './bot.controller';
+import { JwtModule } from '@nestjs/jwt';
+import { UserService } from './bot.service';
 
 @Module({
-  controllers: [UsersController],
-  providers: []
+  imports: [JwtModule],
+  controllers: [UserController],
+  providers: [UserService]
 })
-export class BotModule {}
+export class BotModule { }
