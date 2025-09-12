@@ -44,29 +44,14 @@ export class HouseService {
         return newHouse;
     }
 
-    async getAllHouses(
-        page?: number,
-        limit?: number,
-        search?: string,
-        price?: string
-    ) {
-        let skip
-        let take
-        if (page && limit) {
-            skip = (page - 1) * limit;
-        }
-
-        if (limit) {
-            take = Math.min(limit, 50);
-        }
-
+    async getAllHouses(page?: number, limit?: number, search?: string, price?: string) {
         const where: any = {};
 
         if (search) {
             where.OR = [
                 { title: { contains: search, mode: 'insensitive' } },
                 { address: { contains: search, mode: 'insensitive' } },
-                { description: { contains: search, mode: 'insensitive' } }
+                { description: { contains: search, mode: 'insensitive' } },
             ];
         }
 
@@ -84,26 +69,32 @@ export class HouseService {
             }
         }
 
-        const houses = await this.prisma.house.findMany({
-            skip,
-            take,
+        // pagination options
+        const options: any = {
             where,
             include: {
                 owner: { select: { id: true, name: true, phone: true, role: true } },
-                Category: { select: { id: true, name: true } }
+                Category: { select: { id: true, name: true } },
             },
-            orderBy: { createdAt: 'desc' }
-        });
+            orderBy: { createdAt: 'desc' },
+        };
 
+        if (page && limit) {
+            options.skip = (page - 1) * limit;
+            options.take = Math.min(limit, 50);
+        }
+
+        const houses = await this.prisma.house.findMany(options);
         const total = await this.prisma.house.count({ where });
 
         return {
             data: houses,
             total,
             page,
-            last_page: Math.ceil(total / take)
+            last_page: options.take ? Math.ceil(total / options.take) : 1,
         };
     }
+
 
     async getHouseById(id: number) {
         const house = await this.prisma.house.findUnique({

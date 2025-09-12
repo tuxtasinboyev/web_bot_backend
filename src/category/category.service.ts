@@ -29,24 +29,26 @@ export class CategoryService {
     }
 
     async getAllCategories(page?: number, limit?: number, search?: string) {
-        let skip
-       if(page && limit){
-          skip = (page - 1) * limit;
-       }
         const where: any = {};
         if (search) {
             where.name = { contains: search, mode: 'insensitive' };
         }
-        return this.prisma.category.findMany({
-            where,
-            skip,
-            take: limit,
-        });
+
+        // skip va take ni faqat mavjud bo‘lsa qo‘shamiz:
+        const options: any = { where };
+
+        if (page && limit) {
+            options.skip = (page - 1) * limit;
+            options.take = limit;
+        }
+
+        return this.prisma.category.findMany(options);
     }
+
 
     async getCategoryById(id: number) {
         const existsCategory = await this.prisma.category.findUnique({
-            where: { id:Number(id) },
+            where: { id: Number(id) },
         });
         if (!existsCategory) {
             throw new NotFoundException('Bunday kategoriya mavjud emas');
@@ -56,7 +58,7 @@ export class CategoryService {
 
     async updateCategory(id: number, name?: string, image?: string) {
         const existsCategory = await this.prisma.category.findUnique({
-            where: { id:Number(id) },
+            where: { id: Number(id) },
         });
         if (!existsCategory) {
             throw new NotFoundException('Bunday kategoriya mavjud emas');
@@ -83,7 +85,7 @@ export class CategoryService {
         }
 
         const updatedCategory = await this.prisma.category.update({
-            where: { id:Number(id) },
+            where: { id: Number(id) },
             data,
         });
 
@@ -92,7 +94,7 @@ export class CategoryService {
 
     async deleteCategory(id: number) {
         const existsCategory = await this.prisma.category.findUnique({
-            where: { id:Number(id) },
+            where: { id: Number(id) },
         });
         if (!existsCategory) {
             throw new NotFoundException('Bunday kategoriya mavjud emas');
@@ -103,7 +105,7 @@ export class CategoryService {
         }
 
         await this.prisma.category.delete({
-            where: { id:Number(id) },
+            where: { id: Number(id) },
         });
 
         return { message: "Kategoriya muvaffaqiyatli o'chirildi" };

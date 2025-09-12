@@ -120,20 +120,9 @@ export class UserService {
     }
 
     async getAllUsers(page?: number, limit?: number, search?: string, price?: string) {
-        let skip: number | undefined;
-        let take: number | undefined;
-
-        if (page && limit) {
-            skip = (page - 1) * limit;
-        }
-
-        if (limit) {
-            take = Math.min(limit, 50);
-        }
-
-
         const where: any = {};
 
+        // Search bo'yicha filter
         if (search) {
             where.OR = [
                 { name: { contains: search, mode: "insensitive" } },
@@ -141,6 +130,7 @@ export class UserService {
             ];
         }
 
+        // Price bo'yicha filter
         if (price) {
             const [operator, value] = price.split(":");
             const priceValue = parseInt(value, 10);
@@ -161,10 +151,9 @@ export class UserService {
             }
         }
 
-        const users = await this.prisma.user.findMany({
+        // pagination
+        const options: any = {
             where,
-            skip,
-            take,
             include: {
                 houses: {
                     select: {
@@ -178,22 +167,28 @@ export class UserService {
                 },
             },
             orderBy: { createdAt: "desc" },
-        });
+        };
 
+        if (page && limit) {
+            options.skip = (page - 1) * limit;
+            options.take = Math.min(limit, 50);
+        }
+
+        const users = await this.prisma.user.findMany(options);
         const total = await this.prisma.user.count({ where });
 
         return {
             users,
             total,
             page,
-            limit: take,
-            // totalPages: Math.ceil(total / take),
+            limit: options.take,
         };
     }
 
+
     async getUserById(id: number) {
         const user = await this.prisma.user.findUnique({
-            where: { id:Number(id) },
+            where: { id: Number(id) },
             select: {
                 id: true,
                 imgUrl: true,
@@ -220,7 +215,7 @@ export class UserService {
     }
     async getUserMe(id: number) {
         const user = await this.prisma.user.findUnique({
-            where: { id:Number(id) },
+            where: { id: Number(id) },
             select: {
                 id: true,
                 imgUrl: true,
@@ -275,7 +270,7 @@ export class UserService {
             query.imgUrl = urlGenerator(this.config, image)
         }
         const updatedUser = await this.prisma.user.update({
-            where: { id:Number(id) },
+            where: { id: Number(id) },
             data: { ...payload, imgUrl: query.imgUrl },
         });
 
@@ -285,7 +280,7 @@ export class UserService {
 
 
     async deleteUser(id: number) {
-        const user = await this.prisma.user.findUnique({ where: { id:Number(id) } });
+        const user = await this.prisma.user.findUnique({ where: { id: Number(id) } });
         if (!user) {
             throw new NotFoundException("Foydalanuvchi topilmadi");
         }
@@ -295,14 +290,14 @@ export class UserService {
             const fileName = user.imgUrl.split("/").at(-1)
             unlinkFile(fileName || "")
         }
-        await this.prisma.user.delete({ where: { id:Number(id) } });
+        await this.prisma.user.delete({ where: { id: Number(id) } });
 
         return { message: "Foydalanuvchi muvaffaqiyatli o'chirildi" };
     }
     async updateMe(id: number, payload: Partial<CreateUserDto>, image?: string) {
 
 
-        const user = await this.prisma.user.findUnique({ where: { id:Number(id) } });
+        const user = await this.prisma.user.findUnique({ where: { id: Number(id) } });
         if (!user) {
             throw new NotFoundException("Foydalanuvchi topilmadi");
         }
@@ -327,7 +322,7 @@ export class UserService {
             }
         }
         const updatedUser = await this.prisma.user.update({
-            where: { id:Number(id) },
+            where: { id: Number(id) },
             data: query,
         });
 
