@@ -10,12 +10,7 @@ dotenv.config();
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.enableCors({
-    origin: '*',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-  });
-  app.use(json({ limit: '1000mb' }));
-  app.use(urlencoded({ limit: '1000mb', extended: true }));
+  app.enableCors();
 
 
   app.useGlobalPipes(new ValidationPipe({
