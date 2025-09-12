@@ -74,7 +74,7 @@ export class UserService {
     }
 
     async loginUser(phone: string, password: string) {
-         console.log(phone,password);
+        console.log(phone, password);
         const user = await this.prisma.user.findUnique({ where: { phone } });
         if (!user) {
             throw new NotFoundException("Bunday foydalanuvchi mavjud emas");
@@ -246,7 +246,7 @@ export class UserService {
     }
 
     async updateUser(id: number, payload: Partial<CreateUserDto>, image?: string) {
-        const user = await this.prisma.user.findUnique({ where: { id } });
+        const user = await this.prisma.user.findUnique({ where: { id: Number(id) } });
         if (!user) {
             throw new NotFoundException("Foydalanuvchi topilmadi");
         }
@@ -300,8 +300,8 @@ export class UserService {
         return { message: "Foydalanuvchi muvaffaqiyatli o'chirildi" };
     }
     async updateMe(id: number, payload: Partial<CreateUserDto>, image?: string) {
-       
-        
+
+
         const user = await this.prisma.user.findUnique({ where: { id } });
         if (!user) {
             throw new NotFoundException("Foydalanuvchi topilmadi");
@@ -311,7 +311,7 @@ export class UserService {
             unlinkFile(fileName || "")
         }
 
-         const query: Partial<User> = { ...payload }
+        const query: Partial<User> = { ...payload }
         if (image) {
             query.imgUrl = urlGenerator(this.config, image);
         }
