@@ -14,8 +14,9 @@ async function bootstrap() {
     origin: '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
   });
-  app.use(json({ limit: '0' }));        // 0 = cheksiz
-  app.use(urlencoded({ limit: '0', extended: true }));
+  app.use(json({ limit: '1000mb' }));
+  app.use(urlencoded({ limit: '1000mb', extended: true }));
+
 
   app.useGlobalPipes(new ValidationPipe({
     transform: true,
