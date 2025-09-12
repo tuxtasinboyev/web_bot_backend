@@ -24,7 +24,7 @@ jobs:
 
             if [ ! -d "web_bot_backend/.git" ]; then
               echo "Cloning repository!" 
-              https://github.com/tuxtasinboyev/web_bot_backend.git
+              git clone https://github.com/tuxtasinboyev/web_bot_backend.git
             fi
 
             cd  web_bot_backend    # Shu yerda docker-compose.yml mavjud
