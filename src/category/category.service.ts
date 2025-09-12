@@ -46,7 +46,7 @@ export class CategoryService {
 
     async getCategoryById(id: number) {
         const existsCategory = await this.prisma.category.findUnique({
-            where: { id },
+            where: { id:Number(id) },
         });
         if (!existsCategory) {
             throw new NotFoundException('Bunday kategoriya mavjud emas');
@@ -56,7 +56,7 @@ export class CategoryService {
 
     async updateCategory(id: number, name?: string, image?: string) {
         const existsCategory = await this.prisma.category.findUnique({
-            where: { id },
+            where: { id:Number(id) },
         });
         if (!existsCategory) {
             throw new NotFoundException('Bunday kategoriya mavjud emas');
@@ -83,7 +83,7 @@ export class CategoryService {
         }
 
         const updatedCategory = await this.prisma.category.update({
-            where: { id },
+            where: { id:Number(id) },
             data,
         });
 
@@ -92,7 +92,7 @@ export class CategoryService {
 
     async deleteCategory(id: number) {
         const existsCategory = await this.prisma.category.findUnique({
-            where: { id },
+            where: { id:Number(id) },
         });
         if (!existsCategory) {
             throw new NotFoundException('Bunday kategoriya mavjud emas');
@@ -103,7 +103,7 @@ export class CategoryService {
         }
 
         await this.prisma.category.delete({
-            where: { id },
+            where: { id:Number(id) },
         });
 
         return { message: "Kategoriya muvaffaqiyatli o'chirildi" };

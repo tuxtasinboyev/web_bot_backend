@@ -193,7 +193,7 @@ export class UserService {
 
     async getUserById(id: number) {
         const user = await this.prisma.user.findUnique({
-            where: { id },
+            where: { id:Number(id) },
             select: {
                 id: true,
                 imgUrl: true,
@@ -220,7 +220,7 @@ export class UserService {
     }
     async getUserMe(id: number) {
         const user = await this.prisma.user.findUnique({
-            where: { id },
+            where: { id:Number(id) },
             select: {
                 id: true,
                 imgUrl: true,
@@ -275,7 +275,7 @@ export class UserService {
             query.imgUrl = urlGenerator(this.config, image)
         }
         const updatedUser = await this.prisma.user.update({
-            where: { id },
+            where: { id:Number(id) },
             data: { ...payload, imgUrl: query.imgUrl },
         });
 
@@ -285,7 +285,7 @@ export class UserService {
 
 
     async deleteUser(id: number) {
-        const user = await this.prisma.user.findUnique({ where: { id } });
+        const user = await this.prisma.user.findUnique({ where: { id:Number(id) } });
         if (!user) {
             throw new NotFoundException("Foydalanuvchi topilmadi");
         }
@@ -295,14 +295,14 @@ export class UserService {
             const fileName = user.imgUrl.split("/").at(-1)
             unlinkFile(fileName || "")
         }
-        await this.prisma.user.delete({ where: { id } });
+        await this.prisma.user.delete({ where: { id:Number(id) } });
 
         return { message: "Foydalanuvchi muvaffaqiyatli o'chirildi" };
     }
     async updateMe(id: number, payload: Partial<CreateUserDto>, image?: string) {
 
 
-        const user = await this.prisma.user.findUnique({ where: { id } });
+        const user = await this.prisma.user.findUnique({ where: { id:Number(id) } });
         if (!user) {
             throw new NotFoundException("Foydalanuvchi topilmadi");
         }
@@ -327,7 +327,7 @@ export class UserService {
             }
         }
         const updatedUser = await this.prisma.user.update({
-            where: { id },
+            where: { id:Number(id) },
             data: query,
         });
 

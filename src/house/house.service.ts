@@ -107,7 +107,7 @@ export class HouseService {
 
     async getHouseById(id: number) {
         const house = await this.prisma.house.findUnique({
-            where: { id },
+            where: { id: Number(id) },
             include: {
                 owner: { select: { id: true, name: true, phone: true, role: true } },
                 Category: { select: { id: true, name: true } }
@@ -118,7 +118,7 @@ export class HouseService {
     }
     async getHouseMe(userId: number) {
         const house = await this.prisma.house.findMany({
-            where: { ownerId: userId },
+            where: { ownerId: Number(userId) },
             include: {
                 owner: { select: { id: true, name: true, phone: true, role: true } },
                 Category: { select: { id: true, name: true } }
@@ -175,7 +175,7 @@ export class HouseService {
         dataToUpdate.ownerId = userId;
 
         return this.prisma.house.update({
-            where: { id },
+            where: { id: Number(id) },
             data: dataToUpdate,
             include: {
                 owner: { select: { id: true, name: true, phone: true, role: true } },
@@ -185,7 +185,7 @@ export class HouseService {
     }
 
     async deleteHouse(id: number, userId: number) {
-        const house = await this.prisma.house.findUnique({ where: { id } });
+        const house = await this.prisma.house.findUnique({ where: { id: Number(id) } });
         if (!house) throw new NotFoundException('House not found');
 
 
