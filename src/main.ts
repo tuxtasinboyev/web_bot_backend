@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as dotenv from 'dotenv';
 import { ValidationPipe } from '@nestjs/common';
+import { json, urlencoded } from 'express';
 
 dotenv.config();
 
@@ -13,6 +14,9 @@ async function bootstrap() {
     origin: '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
   });
+  app.use(json({ limit: '0' }));        // 0 = cheksiz
+  app.use(urlencoded({ limit: '0', extended: true }));
+
   app.useGlobalPipes(new ValidationPipe({
     transform: true,
     whitelist: true,
