@@ -52,24 +52,24 @@ export class CategoryController {
     // GET ALL (barchaga ochiq)
     @Get()
     @ApiOperation({ summary: 'Barcha kategoriyalarni olish' })
-    @ApiQuery({ name: 'page', required: false, type: Number })
-    @ApiQuery({ name: 'limit', required: false, type: Number })
+    @ApiQuery({ name: 'page', required: false, type: String })
+    @ApiQuery({ name: 'limit', required: false, type: String })
     @ApiQuery({ name: 'search', required: false, type: String })
     async getAllCategories(
-        @Query('page') page?: number,
-        @Query('limit') limit?: number,
+        @Query('page') page?: string,
+        @Query('limit') limit?: string,
         @Query('search') search?: string,
     ) {
-        return this.categoryService.getAllCategories(page, limit, search);
+        return this.categoryService.getAllCategories(Number(page), Number(limit), search);
     }
 
     // GET BY ID (barchaga ochiq)
     @Get(':id')
     @ApiOperation({ summary: 'ID bo‘yicha kategoriya olish' })
-    @ApiParam({ name: 'id', type: Number })
+    @ApiParam({ name: 'id', type: String })
     @ApiResponse({ status: 404, description: 'Kategoriya topilmadi' })
-    async getCategoryById(@Param('id') id: number) {
-        return this.categoryService.getCategoryById(id);
+    async getCategoryById(@Param('id') id: string) {
+        return this.categoryService.getCategoryById(+id);
     }
 
     // UPDATE (Admin)
@@ -105,7 +105,7 @@ export class CategoryController {
     @roles(Role.ADMIN)
     @ApiBearerAuth()
     @ApiOperation({ summary: 'Kategoriya o‘chirish (Admin)' })
-    @ApiParam({ name: 'id', type: Number })
+    @ApiParam({ name: 'id', type: String })
     async deleteCategory(@Param('id') id: string) {
         return this.categoryService.deleteCategory(+id);
     }

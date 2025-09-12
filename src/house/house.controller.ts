@@ -58,17 +58,17 @@ export class HouseController {
 
   @Get()
   @ApiOperation({ summary: 'Barcha uylani olish' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'page', required: false, type: String })
+  @ApiQuery({ name: 'limit', required: false, type: String })
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiQuery({ name: 'price', required: false, type: String, description: 'Misol: gte:1000' })
   async getAllHouses(
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
     @Query('search') search?: string,
     @Query('price') price?: string,
   ) {
-    return this.houseService.getAllHouses(page, limit, search, price);
+    return this.houseService.getAllHouses(Number(page), Number(limit), search, price);
   }
 
   @Get('me')
@@ -81,9 +81,9 @@ export class HouseController {
 
   @Get(':id')
   @ApiOperation({ summary: 'ID bo‘yicha uy olish' })
-  @ApiParam({ name: 'id', type: Number })
-  async getHouseById(@Param('id', ParseIntPipe) id: number) {
-    return this.houseService.getHouseById(id);
+  @ApiParam({ name: 'id', type: String })
+  async getHouseById(@Param('id') id: string) {
+    return this.houseService.getHouseById(+id);
   }
 
   @UseGuards(GuardsService)
@@ -94,7 +94,7 @@ export class HouseController {
   @ApiBody(HouseApiBody)
   @UseInterceptors(FilesInterceptor('images', 10, fileStorages(['image'])))
   async updateHouse(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Req() req: any,
     @Body() payload: Partial<CreateHouseDto>,
     @UploadedFiles() files?: Express.Multer.File[],
@@ -102,18 +102,18 @@ export class HouseController {
     const userId = req.user.id;
     const file = files?.map(file => file.filename)
     if (file) {
-      return this.houseService.updateHouse(id, userId, payload, file);
+      return this.houseService.updateHouse(+id, userId, payload, file);
     }
-    return this.houseService.updateHouse(id, userId, payload);
+    return this.houseService.updateHouse(+id, userId, payload);
   }
 
   @UseGuards(GuardsService)
   @Delete(':id')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Uyni o‘chirish (faqat egasi)' })
-  @ApiParam({ name: 'id', type: Number })
-  async deleteHouse(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
+  @ApiParam({ name: 'id', type: String })
+  async deleteHouse(@Param('id') id: string, @Req() req: any) {
     const userId = req.user.id;
-    return this.houseService.deleteHouse(id, userId);
+    return this.houseService.deleteHouse(+id, userId);
   }
 }

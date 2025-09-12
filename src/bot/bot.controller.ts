@@ -72,17 +72,17 @@ export class UserController {
   @Get()
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Barcha foydalanuvchilarni olish (Admin)' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'page', required: false, type: String })
+  @ApiQuery({ name: 'limit', required: false, type: String })
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiQuery({ name: 'price', required: false, type: String, description: 'Misol: gte:1000' })
   async getAll(
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
     @Query('search') search?: string,
     @Query('price') price?: string,
   ) {
-    return this.userService.getAllUsers(page, limit, search, price);
+    return this.userService.getAllUsers(Number(page), Number(limit), search, price);
   }
 
   @Get('me')
@@ -126,15 +126,15 @@ export class UserController {
   @UseInterceptors(FileInterceptor('imgUrl', fileStorages(["image"])))
   @ApiBearerAuth()
   async update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() payload: Partial<CreateUserDto>,
     @UploadedFile() file?: Express.Multer.File,
   ) {
 
     if (file) {
-      return this.userService.updateUser(id, payload, file?.filename);
+      return this.userService.updateUser(+id, payload, file?.filename);
     } else {
-      return this.userService.updateUser(id, payload)
+      return this.userService.updateUser(+id, payload)
     }
 
   }
@@ -174,9 +174,9 @@ export class UserController {
   @roles(Role.ADMIN) // faqat adminlar
   @Delete(':id')
   @ApiOperation({ summary: 'Foydalanuvchini o‘chirish (Admin)' })
-  @ApiParam({ name: 'id', type: Number })
-  async delete(@Param('id', ParseIntPipe) id: number) {
-    return this.userService.deleteUser(id);
+  @ApiParam({ name: 'id', type: String })
+  async delete(@Param('id') id: string) {
+    return this.userService.deleteUser(+id);
   }
 
   @UseGuards(GuardsService)
