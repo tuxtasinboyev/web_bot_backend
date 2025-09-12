@@ -268,10 +268,18 @@ export class UserService {
 
         if (image) {
             query.imgUrl = urlGenerator(this.config, image)
+
         }
+
         const updatedUser = await this.prisma.user.update({
             where: { id: Number(id) },
-            data: { ...payload, imgUrl: query.imgUrl },
+            data: {
+                name: payload.name,
+                password: payload.password,
+                phone: payload.phone,
+                role: payload.role,
+                imgUrl: query.imgUrl
+            },
         });
 
         const { password, ...safeUser } = updatedUser

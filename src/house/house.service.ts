@@ -133,34 +133,19 @@ export class HouseService {
             throw new UnauthorizedException('Siz bu uyni yangilay olmaysiz');
         }
 
-        // eski rasmlarni o‘chirish
-        if (house.images && image) {
-            house.images.forEach((img) => {
-                const fileNameToDelete = img.split('/').at(-1) || '';
-                if (house.images.includes(img)) {
-                    unlinkFile(fileNameToDelete);
-                }
-            });
-        }
+        const images = image?.length ? image.map((img) => urlGenerator(this.config, img)) : undefined;
 
-        const images = image?.map((img) => urlGenerator(this.config, img));
-        const dataToUpdate: any = {};
+        const dataToUpdate: Partial<any> = {};
 
         if (payload.title) dataToUpdate.title = payload.title;
-        if (payload.price !== undefined)
-            dataToUpdate.price = Number(payload.price);           // 🔧
-        if (payload.rooms !== undefined)
-            dataToUpdate.rooms = Number(payload.rooms);           // 🔧
-        if (payload.area !== undefined)
-            dataToUpdate.area = Number(payload.area);             // 🔧
-        if (payload.floor !== undefined)
-            dataToUpdate.floor = Number(payload.floor);           // 🔧
-        if (payload.allFloor !== undefined)
-            dataToUpdate.allFloor = Number(payload.allFloor);     // 🔧
+        if (payload.price !== undefined) dataToUpdate.price = Number(payload.price);
+        if (payload.rooms !== undefined) dataToUpdate.rooms = Number(payload.rooms);
+        if (payload.area !== undefined) dataToUpdate.area = Number(payload.area);
+        if (payload.floor !== undefined) dataToUpdate.floor = Number(payload.floor);
+        if (payload.allFloor !== undefined) dataToUpdate.allFloor = Number(payload.allFloor);
         if (payload.address) dataToUpdate.address = payload.address;
         if (payload.description) dataToUpdate.description = payload.description;
-        if (payload.categoryId !== undefined)
-            dataToUpdate.categoryId = Number(payload.categoryId); // 🔧
+        if (payload.categoryId !== undefined) dataToUpdate.categoryId = Number(payload.categoryId);
         if (images) dataToUpdate.images = images;
 
         dataToUpdate.ownerId = userId;
@@ -174,6 +159,7 @@ export class HouseService {
             },
         });
     }
+
 
     async deleteHouse(id: number, userId: number) {
         const house = await this.prisma.house.findUnique({ where: { id: Number(id) } });
