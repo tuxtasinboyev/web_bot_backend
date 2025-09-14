@@ -177,6 +177,12 @@ export class HouseService {
 
         dataToUpdate.ownerId = userId;
 
+        if (payload.durationDays !== undefined) {
+            const createdAt = house.createdAt; 
+            const endDate = new Date(createdAt.getTime() + payload.durationDays * 24 * 60 * 60 * 1000);
+            dataToUpdate.endDate = endDate;
+        }
+
         return this.prisma.house.update({
             where: { id: Number(id) },
             data: dataToUpdate,
