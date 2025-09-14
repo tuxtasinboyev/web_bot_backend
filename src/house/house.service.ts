@@ -25,9 +25,11 @@ export class HouseService {
 
         const endDate = new Date(createdAt.getTime() + payload.durationDays * 24 * 60 * 60 * 1000);
 
+        const { durationDays, ...houseData } = payload;
+
         const newHouse = await this.prisma.house.create({
             data: {
-                ...payload,
+                ...houseData,
                 price: Number(payload.price),
                 floor: payload.floor,
                 allFloor: payload.allFloor,
@@ -43,6 +45,7 @@ export class HouseService {
                 Category: { select: { id: true, name: true } }
             }
         });
+
 
         return newHouse;
     }
@@ -152,33 +155,37 @@ export class HouseService {
         payload: Partial<CreateHouseDto>,
         image?: string[]
     ) {
-        const house = await this.prisma.house.findUnique({ where: { id } });
+        // 1. Uy borligini tekshiramiz
+        const house = await this.prisma.house.findUnique({ where: { id: Number(id) } });
         if (!house) throw new NotFoundException('House not found');
 
+        // 2. Egaligini tekshiramiz
         if (house.ownerId !== userId) {
             throw new UnauthorizedException('Siz bu uyni yangilay olmaysiz');
         }
 
+        // 3. Rasmni URLga o‘giramiz
         const images = image?.length ? image.map((img) => urlGenerator(this.config, img)) : undefined;
 
-        const dataToUpdate: Partial<any> = {};
+        // 4. Yangi ma’lumotlar obyektini yig‘amiz
+        const dataToUpdate: Record<string, any> = {};
 
-        if (payload.title) dataToUpdate.title = payload.title;
+        if (payload.title !== undefined) dataToUpdate.title = payload.title;
         if (payload.price !== undefined) dataToUpdate.price = Number(payload.price);
         if (payload.rooms !== undefined) dataToUpdate.rooms = Number(payload.rooms);
         if (payload.area !== undefined) dataToUpdate.area = Number(payload.area);
         if (payload.floor !== undefined) dataToUpdate.floor = Number(payload.floor);
         if (payload.allFloor !== undefined) dataToUpdate.allFloor = Number(payload.allFloor);
-        if (payload.address) dataToUpdate.address = payload.address;
-        if (payload.description) dataToUpdate.description = payload.description;
+        if (payload.address !== undefined) dataToUpdate.address = payload.address;
+        if (payload.description !== undefined) dataToUpdate.description = payload.description;
         if (payload.categoryId !== undefined) dataToUpdate.categoryId = Number(payload.categoryId);
         if (images) dataToUpdate.images = images;
 
         dataToUpdate.ownerId = userId;
 
         if (payload.durationDays !== undefined) {
-            const createdAt = house.createdAt;
-            const endDate = new Date(createdAt.getTime() + payload.durationDays * 24 * 60 * 60 * 1000);
+            const baseDate = house.createdAt ?? new Date();
+            const endDate = new Date(baseDate.getTime() + payload.durationDays * 24 * 60 * 60 * 1000);
             dataToUpdate.endDate = endDate;
         }
 
