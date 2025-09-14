@@ -134,7 +134,7 @@ export class HouseService {
             }
         });
 
-        const house = await this.prisma.house.findMany({
+        const houses = await this.prisma.house.findMany({
             where: { ownerId: Number(userId) },
             include: {
                 owner: { select: { id: true, name: true, phone: true, role: true } },
@@ -142,8 +142,7 @@ export class HouseService {
             }
         });
 
-        if (!house || house.length === 0) throw new NotFoundException('House not found');
-        return house;
+        return houses;
     }
 
 
@@ -178,7 +177,7 @@ export class HouseService {
         dataToUpdate.ownerId = userId;
 
         if (payload.durationDays !== undefined) {
-            const createdAt = house.createdAt; 
+            const createdAt = house.createdAt;
             const endDate = new Date(createdAt.getTime() + payload.durationDays * 24 * 60 * 60 * 1000);
             dataToUpdate.endDate = endDate;
         }
