@@ -29,13 +29,15 @@ import { GuardsService } from 'src/common/guards/guards.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { HouseApiBody, RequiredHouseApiBody } from 'src/common/types/api.body.types';
 import { fileStorages } from 'src/common/types/upload_types';
+import { roles } from 'src/common/role/role.decorator';
+import { RoleGuard } from 'src/common/role/role.service';
 
 @ApiTags('Houses')
 @Controller('houses')
 export class HouseController {
   constructor(private readonly houseService: HouseService) { }
 
-  @UseGuards(GuardsService)
+  @UseGuards(GuardsService,RoleGuard)
   @Post()
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Yangi uy yaratish (kamida 3 rasm bilan)' })
@@ -72,7 +74,7 @@ export class HouseController {
   }
 
   @Get('me')
-  @UseGuards(GuardsService)
+  @UseGuards(GuardsService,RoleGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'uzini ularini olish' })
   async getHouseMe(@Req() req) {
@@ -86,7 +88,7 @@ export class HouseController {
     return this.houseService.getHouseById(+id);
   }
 
-  @UseGuards(GuardsService)
+  @UseGuards(GuardsService,RoleGuard)
   @Put(':id')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Uy ma`lumotlarini yangilash' })
@@ -107,7 +109,7 @@ export class HouseController {
     return this.houseService.updateHouse(+id, userId, payload);
   }
 
-  @UseGuards(GuardsService)
+  @UseGuards(GuardsService,RoleGuard)
   @Delete(':id')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Uyni o‘chirish (faqat egasi)' })
@@ -115,5 +117,15 @@ export class HouseController {
   async deleteHouse(@Param('id') id: string, @Req() req: any) {
     const userId = req.user.id;
     return this.houseService.deleteHouse(+id, userId);
+  }
+  @UseGuards(GuardsService,RoleGuard)
+  @roles('ADMIN')
+  @Delete('admin/delete/house/:id')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Uyni o‘chirish (faqat egasi)' })
+  @ApiParam({ name: 'id', type: String })
+  async deleteHouseForAdmin(@Param('id') id: string, @Req() req: any) {
+    const userId = req.user.id;
+    return this.houseService.deleteHouseForAdmin(+id);
   }
 }

@@ -37,6 +37,7 @@ import { fileStorages } from 'src/common/types/upload_types';
 import { urlGenerator } from 'src/common/types/generator.types';
 import { pay } from 'node_modules/telegraf/typings/button';
 import type { Request } from 'express';
+import { RoleGuard } from 'src/common/role/role.service';
 
 @ApiTags('Users')
 @Controller('users')
@@ -67,7 +68,7 @@ export class UserController {
     return this.userService.loginUser(phone, password);
   }
 
-  @UseGuards(GuardsService)
+  @UseGuards(GuardsService,RoleGuard)
   @roles(Role.ADMIN) // faqat adminlar ko‘ra oladi
   @Get()
   @ApiBearerAuth()
@@ -86,7 +87,7 @@ export class UserController {
   }
 
   @Get('me')
-  @UseGuards(GuardsService)
+  @UseGuards(GuardsService,RoleGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "O‘z profilini olish" })
   @ApiOkResponse({ description: 'Foydalanuvchi maʼlumotlari muvaffaqiyatli olindi' })
@@ -97,7 +98,7 @@ export class UserController {
 
 
   @Get(':id')
-  @UseGuards(GuardsService)
+  @UseGuards(GuardsService,RoleGuard)
 
   @roles(Role.ADMIN) // faqat adminlar
   @ApiOperation({ summary: 'ID bo‘yicha foydalanuvchini olish (Admin)' })
@@ -121,7 +122,7 @@ export class UserController {
     },
   })
   @Put(':id')
-  @UseGuards(GuardsService)
+  @UseGuards(GuardsService,RoleGuard)
   @roles(Role.ADMIN)
   @UseInterceptors(FileInterceptor('imgUrl', fileStorages(["image"])))
   @ApiBearerAuth()
@@ -152,7 +153,7 @@ export class UserController {
     },
   })
   @Post()
-  @UseGuards(GuardsService)
+  @UseGuards(GuardsService,RoleGuard)
   @roles(Role.ADMIN)
   @UseInterceptors(FileInterceptor('imgUrl', fileStorages(["image"])))
   @ApiBearerAuth()
@@ -170,7 +171,7 @@ export class UserController {
 
   }
 
-  @UseGuards(GuardsService)
+  @UseGuards(GuardsService,RoleGuard)
   @roles(Role.ADMIN) // faqat adminlar
   @Delete(':id')
   @ApiOperation({ summary: 'Foydalanuvchini o‘chirish (Admin)' })
@@ -179,7 +180,7 @@ export class UserController {
     return this.userService.deleteUser(+id);
   }
 
-  @UseGuards(GuardsService)
+  @UseGuards(GuardsService,RoleGuard)
   @Patch('me')
   @UseInterceptors(FileInterceptor('image', fileStorages(['image'])))
   @ApiBearerAuth()

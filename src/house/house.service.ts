@@ -178,4 +178,19 @@ export class HouseService {
 
         return { message: 'House deleted successfully' };
     }
+      async deleteHouseForAdmin(id: number) {
+        const house = await this.prisma.house.findUnique({ where: { id: Number(id) } });
+        if (!house) throw new NotFoundException('House not found');
+
+
+        if (house.images) {
+            house.images.map((img) => {
+                const fileNames = img.split('/').at(-1)
+                unlinkFile(fileNames || "")
+            })
+        }
+        await this.prisma.house.delete({ where: { id } });
+
+        return { message: 'House deleted successfully' };
+    }
 }
