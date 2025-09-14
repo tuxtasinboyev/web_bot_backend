@@ -17,10 +17,13 @@ export class HouseService {
         if (!user) throw new NotFoundException('User not found');
 
         const existsCategory = await this.prisma.category.findUnique({ where: { id: Number(payload.categoryId) } })
-        if (!existsCategory) throw new NotFoundException('bunday id category mavjud emas')
+        if (!existsCategory) throw new NotFoundException('bunday id category mavjud emas');
 
-        const uploadedImages = image.map((img) => urlGenerator(this.config, img))
+        const uploadedImages = image.map((img) => urlGenerator(this.config, img));
 
+        const createdAt = new Date();
+
+        const endDate = new Date(createdAt.getTime() + payload.durationDays * 24 * 60 * 60 * 1000);
 
         const newHouse = await this.prisma.house.create({
             data: {
@@ -33,6 +36,7 @@ export class HouseService {
                 categoryId: payload.categoryId,
                 images: uploadedImages,
                 ownerId: user.id,
+                endDate,
             },
             include: {
                 owner: { select: { id: true, name: true, phone: true, role: true } },
@@ -40,11 +44,16 @@ export class HouseService {
             }
         });
 
-
         return newHouse;
     }
 
     async getAllHouses(page?: number, limit?: number, search?: string, price?: string) {
+        // 1️⃣ Mudati tugagan uyni avtomatik o'chirish
+        await this.prisma.house.deleteMany({
+            where: { endDate: { lte: new Date() } }
+        });
+
+        // 2️⃣ Filter va search
         const where: any = {};
 
         if (search) {
@@ -69,7 +78,7 @@ export class HouseService {
             }
         }
 
-        // pagination options
+        // 3️⃣ Query options
         const options: any = {
             where,
             include: {
@@ -178,7 +187,7 @@ export class HouseService {
 
         return { message: 'House deleted successfully' };
     }
-      async deleteHouseForAdmin(id: number) {
+    async deleteHouseForAdmin(id: number) {
         const house = await this.prisma.house.findUnique({ where: { id: Number(id) } });
         if (!house) throw new NotFoundException('House not found');
 

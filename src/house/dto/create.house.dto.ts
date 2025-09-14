@@ -14,7 +14,7 @@ export class CreateHouseDto {
   @ApiProperty({ description: 'Uyning manzili' })
   @IsString()
   address: string;
-  
+
   @ApiPropertyOptional({ description: 'Uyning Kvadrati' })
   @IsNumber()
   @IsOptional()
@@ -42,4 +42,8 @@ export class CreateHouseDto {
   @IsInt()
   @IsOptional()
   categoryId?: number;
+  @ApiProperty({ description: 'Ijara davomiyligi kunlarda (5–20)' })
+  @IsInt()
+  durationDays: number;
+  
 }

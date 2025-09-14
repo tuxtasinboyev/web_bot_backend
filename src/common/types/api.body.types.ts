@@ -14,6 +14,7 @@ export const HouseApiBody = {
       price: { type: 'number' },
       rooms: { type: 'number' },
       categoryId: { type: 'number' },
+      durationDays: { type: 'number' },
       images: { type: 'array', items: { type: 'string', format: 'binary' } },
     },
   },

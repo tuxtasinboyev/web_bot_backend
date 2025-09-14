@@ -50,6 +50,9 @@ model House {
   owner      User      @relation(fields: [ownerId], references: [id])
   Category   Category? @relation(fields: [categoryId], references: [id])
   categoryId Int?
+  endDate    DateTime
+
+  @@index([endDate])
 }
 
 enum Role {
