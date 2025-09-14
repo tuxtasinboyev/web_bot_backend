@@ -106,6 +106,12 @@ export class HouseService {
 
 
     async getHouseById(id: number) {
+        const now = new Date();
+
+        await this.prisma.house.deleteMany({
+            where: { id: Number(id), endDate: { lte: now } }
+        });
+
         const house = await this.prisma.house.findUnique({
             where: { id: Number(id) },
             include: {
@@ -113,10 +119,21 @@ export class HouseService {
                 Category: { select: { id: true, name: true } }
             }
         });
+
         if (!house) throw new NotFoundException('House not found');
         return house;
     }
+
     async getHouseMe(userId: number) {
+        const now = new Date();
+
+        await this.prisma.house.deleteMany({
+            where: {
+                ownerId: Number(userId),
+                endDate: { lte: now },
+            }
+        });
+
         const house = await this.prisma.house.findMany({
             where: { ownerId: Number(userId) },
             include: {
@@ -124,7 +141,8 @@ export class HouseService {
                 Category: { select: { id: true, name: true } }
             }
         });
-        if (!house) throw new NotFoundException('House not found');
+
+        if (!house || house.length === 0) throw new NotFoundException('House not found');
         return house;
     }
 
