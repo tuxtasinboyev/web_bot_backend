@@ -55,6 +55,7 @@ model House {
   @@index([endDate])
 }
 
+
 enum Role {
   ADMIN
   OWNER
