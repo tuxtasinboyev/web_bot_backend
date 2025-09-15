@@ -47,8 +47,8 @@ model House {
   updatedAt   DateTime @updatedAt
 
   ownerId    Int
-  owner      User      @relation(fields: [ownerId], references: [id])
-  Category   Category? @relation(fields: [categoryId], references: [id])
+  owner      User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  Category   Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   categoryId Int?
   endDate    DateTime
 
@@ -60,4 +60,3 @@ enum Role {
   OWNER
   TENANT
 }
-
