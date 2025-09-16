@@ -329,6 +329,14 @@ export class UserService {
                 throw new BadRequestException("Bunday telefon raqam mavjud");
             }
         }
+
+        if (payload.phone) {
+            const existsPhone = await this.prisma.user.findUnique({ where: { phone: payload.phone } })
+            if (existsPhone) {
+                throw new ConflictException('this pone already exists')
+            }
+        }
+
         const updatedUser = await this.prisma.user.update({
             where: { id: Number(id) },
             data: query,
