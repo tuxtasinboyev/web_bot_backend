@@ -303,47 +303,46 @@ export class UserService {
         return { message: "Foydalanuvchi muvaffaqiyatli o'chirildi" };
     }
     async updateMe(id: number, payload: Partial<CreateUserDto>, image?: string) {
-
-
         const user = await this.prisma.user.findUnique({ where: { id: Number(id) } });
-        if (!user) {
-            throw new NotFoundException("Foydalanuvchi topilmadi");
-        }
-        if (user.imgUrl) {
-            const fileName = user.imgUrl.split("/").at(-1)
-            unlinkFile(fileName || "")
+        if (!user) throw new NotFoundException("Foydalanuvchi topilmadi");
+
+        if (user.imgUrl && image) {
+            const fileName = user.imgUrl.split("/").at(-1);
+            unlinkFile(fileName || "");
         }
 
-        const query: Partial<User> = { ...payload }
+        const query: Partial<User> = { ...payload };
         if (image) {
             query.imgUrl = urlGenerator(this.config, image);
         }
         if (payload.password) {
             query.password = await bcrypt.hash(payload.password, 10);
         }
+
         if (payload.phone && payload.phone !== user.phone) {
-            const phoneExists = await this.prisma.user.findUnique({
+            const exists = await this.prisma.user.findUnique({
                 where: { phone: payload.phone },
             });
-            if (phoneExists) {
-                throw new BadRequestException("Bunday telefon raqam mavjud");
+
+            if (exists && exists.id !== id) {
+                throw new ConflictException('Bu telefon raqam boshqa foydalanuvchida mavjud');
             }
         }
 
-        if (payload.phone) {
-            const existsPhone = await this.prisma.user.findUnique({ where: { phone: payload.phone } })
-            if (existsPhone) {
-                throw new ConflictException('this pone already exists')
+        try {
+            const updatedUser = await this.prisma.user.update({
+                where: { id: Number(id) },
+                data: query,
+            });
+            return updatedUser;
+        } catch (err: any) {
+            if (err.code === 'P2002') {
+                throw new ConflictException('Bu telefon raqam boshqa foydalanuvchida mavjud');
             }
+            throw err;
         }
-
-        const updatedUser = await this.prisma.user.update({
-            where: { id: Number(id) },
-            data: query,
-        });
-
-        return updatedUser;
     }
+
 
 
 
