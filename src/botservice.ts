@@ -54,85 +54,35 @@ export class BotService implements OnModuleInit {
 
         this.userLimits.set(userId, limit);
 
-        // 🎨 SUPER CHIROYLI XUSH KELIBSIZ XABARI
-        const welcomeMessage = `
-╔═══════════════════════╗
-     🌟 XUSH KELIBSIZ! 🌟
-╚═══════════════════════╝
+        // Professional xush kelibsiz xabari
+        const welcomeMessage = `⚠️ Botdan foydalanish uchun qoidalarni o'qib chiqing va quyidagi kanallarga obuna bo'ling:`;
 
-👋 Assalomu alaykum, <b>${userName}</b>!
+        // Kanal tugmalarini yaratish (har biri alohida qatorda)
+        const channelButtons = channels.map((channel) => {
+          const url = channel.startsWith("@")
+            ? `https://t.me/${channel.slice(1)}`
+            : channel;
+          return [Markup.button.url(`❌ ${channel}`, url)];
+        });
 
-🎯 Botimizdan foydalanish uchun:
-   ├─ 📢 Quyidagi kanallarga obuna bo'ling
-   └─ ✅ "Obuna bo'ldim" tugmasini bosing
-
-━━━━━━━━━━━━━━━━━━━━━━━━
-        `.trim();
-
-        // 🎨 KANAL TUGMALARINI YARATISH (2 tadan, gradient ranglarda)
-        const channelButtons: any[] = [];
-        const emojis = ["🔵", "🟣", "🟢", "🟡", "🔴", "🟠", "⚪️", "🟤"]; // Har xil ranglar
-
-        for (let i = 0; i < channels.length; i += 2) {
-          const row: any[] = [];
-
-          // Birinchi kanal
-          const channel1 = channels[i];
-          const url1 = channel1.startsWith("@")
-            ? `https://t.me/${channel1.slice(1)}`
-            : channel1;
-          const emoji1 = emojis[i % emojis.length];
-          row.push(Markup.button.url(`${emoji1} ${channel1}`, url1));
-
-          // Ikkinchi kanal (agar mavjud bo'lsa)
-          if (i + 1 < channels.length) {
-            const channel2 = channels[i + 1];
-            const url2 = channel2.startsWith("@")
-              ? `https://t.me/${channel2.slice(1)}`
-              : channel2;
-            const emoji2 = emojis[(i + 1) % emojis.length];
-            row.push(Markup.button.url(`${emoji2} ${channel2}`, url2));
-          }
-
-          channelButtons.push(row);
-        }
-
-        // 🎨 AJRATUVCHI CHIZIQ
-        const dividerButton: any[] = [
-          Markup.button.callback("━━━━━━━━━━━━━━━━━━━━━", "DIVIDER")
-        ];
-
-        // 🎨 "OBUNA BO'LDIM" TUGMASI (to'liq kenglikda, gradient emoji bilan)
-        const checkButton: any[] = [
-          Markup.button.callback("✅ OBUNA BO'LDIM ✅", "CHECK_SUBS")
-        ];
+        // "Obuna bo'ldim" tugmasi
+        const checkButton = [Markup.button.callback("✅ Tekshirish", "CHECK_SUBS")];
 
         // Barcha tugmalarni birlashtirish
-        const allButtons = [...channelButtons, dividerButton, checkButton];
+        const allButtons = [...channelButtons, checkButton];
 
         // Xabarni yuborish va ID sini saqlash
         const sentMessage = await ctx.reply(
           welcomeMessage,
-          {
-            parse_mode: "HTML",
-            ...Markup.inlineKeyboard(allButtons)
-          }
+          Markup.inlineKeyboard(allButtons)
         );
         this.waitingMessages.set(userId, sentMessage.message_id);
-      });
-
-      // Ajratuvchi tugma bosilganda (hech narsa qilmaslik)
-      this.bot.action("DIVIDER", async (ctx) => {
-        await ctx.answerCbQuery();
       });
 
       // Callback tugma bosilganda
       this.bot.action("CHECK_SUBS", async (ctx) => {
         const userId = ctx.from?.id;
         if (!userId) return;
-
-        // Tekshirish jarayoni xabari
-        await ctx.answerCbQuery("⏳ Obuna tekshirilmoqda...");
 
         let allSubscribed = true;
         const notSubscribedChannels: string[] = [];
@@ -153,30 +103,41 @@ export class BotService implements OnModuleInit {
         }
 
         if (!allSubscribed) {
-          const channelList = notSubscribedChannels
-            .map((ch, idx) => `   ${idx + 1}. ❌ ${ch}`)
-            .join('\n');
+          // Obuna bo'lmagan kanallar uchun yangi xabar
+          const notSubMessage = `⚠️ Botdan foydalanish uchun qoidalarni o'qib chiqing va quyidagi kanallarga obuna bo'ling:`;
 
-          const errorMessage = `
-╔════════════════════════╗
-     ⚠️ DIQQAT! ⚠️
-╚════════════════════════╝
-
-<b>Siz hali barcha kanallarga obuna bo'lmadingiz!</b>
-
-📋 <b>Quyidagi kanallarga obuna bo'ling:</b>
-${channelList}
-
-━━━━━━━━━━━━━━━━━━━━━━━━
-
-🔄 Obuna bo'lgandan keyin qaytadan 
-   <b>"✅ OBUNA BO'LDIM"</b> tugmasini bosing.
-          `.trim();
-
-          return ctx.reply(errorMessage, {
-            parse_mode: "HTML",
-            reply_markup: { remove_keyboard: true }
+          // Faqat obuna bo'lmagan kanallar tugmalari
+          const notSubButtons = notSubscribedChannels.map((channel) => {
+            const url = channel.startsWith("@")
+              ? `https://t.me/${channel.slice(1)}`
+              : channel;
+            return [Markup.button.url(`❌ ${channel}`, url)];
           });
+
+          // "Tekshirish" tugmasi
+          const recheckButton = [Markup.button.callback("✅ Tekshirish", "CHECK_SUBS")];
+
+          // Barcha tugmalarni birlashtirish
+          const allNotSubButtons = [...notSubButtons, recheckButton];
+
+          // Avvalgi xabarni o'chirish
+          const messageId = this.waitingMessages.get(userId);
+          if (messageId) {
+            try {
+              await ctx.deleteMessage(messageId);
+            } catch (err) {
+              console.log("Xabarni o'chirish mumkin emas:", err);
+            }
+          }
+
+          // Yangi xabar yuborish
+          const newMessage = await ctx.reply(
+            notSubMessage,
+            Markup.inlineKeyboard(allNotSubButtons)
+          );
+          this.waitingMessages.set(userId, newMessage.message_id);
+
+          return ctx.answerCbQuery("❌ Hali barcha kanallarga obuna bo'lmadingiz!");
         }
 
         // Avvalgi xabarni o'chirish
@@ -190,32 +151,15 @@ ${channelList}
           this.waitingMessages.delete(userId);
         }
 
-        // 🎉 MUVAFFAQIYATLI XABAR
-        const successMessage = `
-╔═══════════════════════╗
-     🎉 TABRIKLAYMIZ! 🎉
-╚═══════════════════════╝
-
-✅ Siz barcha kanallarga muvaffaqiyatli 
-   obuna bo'ldingiz!
-
-🌟 Endi botimizdan to'liq foydalanishingiz 
-   mumkin!
-
-━━━━━━━━━━━━━━━━━━━━━━━━
-
-👇 Quyidagi tugmani bosing:
-        `.trim();
-
+        // Muvaffaqiyatli xabar
         await ctx.reply(
-          successMessage,
-          {
-            parse_mode: "HTML",
-            ...Markup.inlineKeyboard([
-              [Markup.button.webApp("🚀 RO'YXATDAN O'TISH 🚀", "https://salomnnl.netlify.app/login")]
-            ])
-          }
+          "✅ Barcha kanallarga obuna bo'ldingiz!\n\n📋 Endi ro'yxatdan o'tishingiz mumkin:",
+          Markup.inlineKeyboard([
+            [Markup.button.webApp("📋 Ro'yxatdan o'tish", "https://salomnnl.netlify.app/login")]
+          ])
         );
+
+        ctx.answerCbQuery("✅ Muvaffaqiyatli!");
       });
 
       await this.bot.launch();
