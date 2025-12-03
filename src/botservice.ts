@@ -12,6 +12,7 @@ interface UserRateLimit {
 export class BotService implements OnModuleInit {
   private bot: Telegraf;
   private userLimits: Map<number, UserRateLimit> = new Map();
+  private waitingMessages: Map<number, number> = new Map();
 
   constructor() {
     this.bot = new Telegraf(process.env.BOT_TOKEN as string);
@@ -21,16 +22,21 @@ export class BotService implements OnModuleInit {
     const channels = process.env.CHANNELS?.split(",") || [];
 
     (async () => {
+      // /start komandasi
       this.bot.start(async (ctx) => {
         const userId = ctx.from?.id;
+        const userName = ctx.from?.first_name || "Foydalanuvchi";
         if (!userId) return;
 
+        // Rate limit tekshirish
         const now = Date.now();
         const limit = this.userLimits.get(userId) || { count: 0, firstRequestTime: now };
 
         if (limit.blockedUntil && now < limit.blockedUntil) {
           const remaining = Math.ceil((limit.blockedUntil - now) / (1000 * 60 * 60));
-          return ctx.reply(`Siz vaqtincha bloklandingiz. Qayta urinib ko‘rishingiz mumkin: ${remaining} soatdan keyin`);
+          return ctx.reply(
+            `⛔️ Siz vaqtincha bloklandingiz.\n⏰ Qayta urinish: ${remaining} soatdan keyin`
+          );
         }
 
         if (now - limit.firstRequestTime > 60 * 1000) {
@@ -43,51 +49,172 @@ export class BotService implements OnModuleInit {
         if (limit.count > 10) {
           limit.blockedUntil = now + 2 * 24 * 60 * 60 * 1000;
           this.userLimits.set(userId, limit);
-          return ctx.reply("Siz juda tez sorov yubordingiz. 2 kunga bloklandingiz.");
+          return ctx.reply("⚠️ Siz juda tez sorov yubordingiz.\n🔒 2 kunga bloklandingiz.");
         }
 
         this.userLimits.set(userId, limit);
 
-        // Kanalga obuna bo'lishni tekshirish
+        // 🎨 SUPER CHIROYLI XUSH KELIBSIZ XABARI
+        const welcomeMessage = `
+╔═══════════════════════╗
+     🌟 XUSH KELIBSIZ! 🌟
+╚═══════════════════════╝
+
+👋 Assalomu alaykum, <b>${userName}</b>!
+
+🎯 Botimizdan foydalanish uchun:
+   ├─ 📢 Quyidagi kanallarga obuna bo'ling
+   └─ ✅ "Obuna bo'ldim" tugmasini bosing
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+        `.trim();
+
+        // 🎨 KANAL TUGMALARINI YARATISH (2 tadan, gradient ranglarda)
+        const channelButtons: any[] = [];
+        const emojis = ["🔵", "🟣", "🟢", "🟡", "🔴", "🟠", "⚪️", "🟤"]; // Har xil ranglar
+
+        for (let i = 0; i < channels.length; i += 2) {
+          const row: any[] = [];
+
+          // Birinchi kanal
+          const channel1 = channels[i];
+          const url1 = channel1.startsWith("@")
+            ? `https://t.me/${channel1.slice(1)}`
+            : channel1;
+          const emoji1 = emojis[i % emojis.length];
+          row.push(Markup.button.url(`${emoji1} ${channel1}`, url1));
+
+          // Ikkinchi kanal (agar mavjud bo'lsa)
+          if (i + 1 < channels.length) {
+            const channel2 = channels[i + 1];
+            const url2 = channel2.startsWith("@")
+              ? `https://t.me/${channel2.slice(1)}`
+              : channel2;
+            const emoji2 = emojis[(i + 1) % emojis.length];
+            row.push(Markup.button.url(`${emoji2} ${channel2}`, url2));
+          }
+
+          channelButtons.push(row);
+        }
+
+        // 🎨 AJRATUVCHI CHIZIQ
+        const dividerButton: any[] = [
+          Markup.button.callback("━━━━━━━━━━━━━━━━━━━━━", "DIVIDER")
+        ];
+
+        // 🎨 "OBUNA BO'LDIM" TUGMASI (to'liq kenglikda, gradient emoji bilan)
+        const checkButton: any[] = [
+          Markup.button.callback("✅ OBUNA BO'LDIM ✅", "CHECK_SUBS")
+        ];
+
+        // Barcha tugmalarni birlashtirish
+        const allButtons = [...channelButtons, dividerButton, checkButton];
+
+        // Xabarni yuborish va ID sini saqlash
+        const sentMessage = await ctx.reply(
+          welcomeMessage,
+          {
+            parse_mode: "HTML",
+            ...Markup.inlineKeyboard(allButtons)
+          }
+        );
+        this.waitingMessages.set(userId, sentMessage.message_id);
+      });
+
+      // Ajratuvchi tugma bosilganda (hech narsa qilmaslik)
+      this.bot.action("DIVIDER", async (ctx) => {
+        await ctx.answerCbQuery();
+      });
+
+      // Callback tugma bosilganda
+      this.bot.action("CHECK_SUBS", async (ctx) => {
+        const userId = ctx.from?.id;
+        if (!userId) return;
+
+        // Tekshirish jarayoni xabari
+        await ctx.answerCbQuery("⏳ Obuna tekshirilmoqda...");
+
         let allSubscribed = true;
+        const notSubscribedChannels: string[] = [];
+
         for (const channel of channels) {
           const chatId = channel.startsWith("@") ? channel : `@${channel}`;
-          const member = await this.bot.telegram.getChatMember(chatId, userId);
-          if (member.status === "left" || member.status === "kicked") {
+          try {
+            const member = await this.bot.telegram.getChatMember(chatId, userId);
+            if (member.status === "left" || member.status === "kicked") {
+              allSubscribed = false;
+              notSubscribedChannels.push(channel);
+            }
+          } catch (err) {
+            console.log(`Kanal tekshirish xatolik: ${channel}`, err);
             allSubscribed = false;
-            break;
+            notSubscribedChannels.push(channel);
           }
         }
 
         if (!allSubscribed) {
-          // Foydalanuvchi obuna bo‘lmagan bo‘lsa, xabarni saqlash va qaytarish
-          return ctx.reply(
-            `Iltimos, barcha kanallarga obuna bo'ling: \n${channels.join("\n")}`
-          );
+          const channelList = notSubscribedChannels
+            .map((ch, idx) => `   ${idx + 1}. ❌ ${ch}`)
+            .join('\n');
+
+          const errorMessage = `
+╔════════════════════════╗
+     ⚠️ DIQQAT! ⚠️
+╚════════════════════════╝
+
+<b>Siz hali barcha kanallarga obuna bo'lmadingiz!</b>
+
+📋 <b>Quyidagi kanallarga obuna bo'ling:</b>
+${channelList}
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔄 Obuna bo'lgandan keyin qaytadan 
+   <b>"✅ OBUNA BO'LDIM"</b> tugmasini bosing.
+          `.trim();
+
+          return ctx.reply(errorMessage, {
+            parse_mode: "HTML",
+            reply_markup: { remove_keyboard: true }
+          });
         }
 
-        // Agar foydalanuvchi barcha kanallarga obuna bo‘lgan bo‘lsa, avvalgi xabarni o‘chirish
-        try {
-          await ctx.deleteMessage(); // shu start xabarini o'chiradi
-        } catch (err) {
-          console.log("Xabarni o'chirish mumkin emas:", err);
+        // Avvalgi xabarni o'chirish
+        const messageId = this.waitingMessages.get(userId);
+        if (messageId) {
+          try {
+            await ctx.deleteMessage(messageId);
+          } catch (err) {
+            console.log("Xabarni o'chirish mumkin emas:", err);
+          }
+          this.waitingMessages.delete(userId);
         }
 
-        // Tugmalarni yaratish
-        const buttons = channels.map((channel) => {
-          const url = channel.startsWith("@") ? `https://t.me/${channel.slice(1)}` : channel;
-          return Markup.button.url(`Kanal: ${channel}`, url);
-        });
+        // 🎉 MUVAFFAQIYATLI XABAR
+        const successMessage = `
+╔═══════════════════════╗
+     🎉 TABRIKLAYMIZ! 🎉
+╚═══════════════════════╝
+
+✅ Siz barcha kanallarga muvaffaqiyatli 
+   obuna bo'ldingiz!
+
+🌟 Endi botimizdan to'liq foydalanishingiz 
+   mumkin!
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+👇 Quyidagi tugmani bosing:
+        `.trim();
 
         await ctx.reply(
-          "Salom! Ijara BOR botga xush kelibsiz 👋",
-          Markup.inlineKeyboard([
-            Markup.button.webApp(
-              "📋 Ro‘yxatdan o‘tish",
-              "https://salomnnl.netlify.app/login"
-            ),
-            ...buttons,
-          ])
+          successMessage,
+          {
+            parse_mode: "HTML",
+            ...Markup.inlineKeyboard([
+              [Markup.button.webApp("🚀 RO'YXATDAN O'TISH 🚀", "https://salomnnl.netlify.app/login")]
+            ])
+          }
         );
       });
 
